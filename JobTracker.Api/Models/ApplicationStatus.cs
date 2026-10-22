@@ -6,5 +6,6 @@ public enum ApplicationStatus
     Applied,
     ReceivedResponse,
     Interview,
+    Rejected,
     Offer
 }
