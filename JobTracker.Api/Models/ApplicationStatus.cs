@@ -7,5 +7,7 @@ public enum ApplicationStatus
     ReceivedResponse,
     Interview,
     Rejected,
-    Offer
+    Offer,
+    Withdrawn,
+    Ghosted
 }
