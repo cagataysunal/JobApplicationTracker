@@ -1,9 +1,5 @@
 namespace JobTracker.Api.Infrastructure;
 
-/// <summary>
-/// Reads a docker-compose style .env file into configuration, so local secrets
-/// live in one file that both docker compose and the API use.
-/// </summary>
 public static class DotEnv
 {
     public static Dictionary<string, string?> Parse(IEnumerable<string> lines)
@@ -30,10 +26,8 @@ public static class DotEnv
 
     extension(IConfigurationManager configuration)
     {
-        /// <summary>
-        /// Adds values from <paramref name="path"/> without overriding keys that are
-        /// already set, so real environment variables and user-secrets still win.
-        /// </summary>
+        // Keys that are already set are kept, so real environment variables and
+        // user-secrets take precedence over .env.
         public void AddDotEnvFile(string path)
         {
             if (!File.Exists(path))

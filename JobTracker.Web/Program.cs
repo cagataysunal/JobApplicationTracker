@@ -7,7 +7,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// The API runs on its own origin; its address comes from wwwroot/appsettings.json.
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("ApiBaseUrl is not configured.");
 

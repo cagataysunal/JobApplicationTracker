@@ -7,10 +7,6 @@ using Testcontainers.MsSql;
 
 namespace JobTracker.Tests.Api;
 
-/// <summary>
-/// Boots the real API in memory against a throwaway SQL Server container.
-/// One container is shared by every test in the "Api" collection.
-/// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly MsSqlContainer _db = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();

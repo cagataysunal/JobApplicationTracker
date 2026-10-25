@@ -13,7 +13,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, TimePro
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder) =>
-        // Store every enum as readable text instead of an int.
         builder.Properties<Enum>().HaveConversion<string>().HaveMaxLength(32);
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

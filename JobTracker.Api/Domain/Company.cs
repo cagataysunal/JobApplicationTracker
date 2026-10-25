@@ -5,7 +5,6 @@ public sealed class Company : Entity
     public required string Name
     {
         get;
-        // C# 14 `field` keyword: normalize without a hand-written backing field.
         set => field = value.Trim();
     }
 

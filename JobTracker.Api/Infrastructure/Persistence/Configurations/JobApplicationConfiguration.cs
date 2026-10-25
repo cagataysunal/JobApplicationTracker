@@ -13,7 +13,6 @@ internal sealed class JobApplicationConfiguration : IEntityTypeConfiguration<Job
         builder.Property(a => a.Location).HasMaxLength(200);
         builder.Property(a => a.Notes).HasMaxLength(4000);
 
-        // EF Core 10: optional complex type -> Salary_Min, Salary_Max, ... columns.
         builder.ComplexProperty(a => a.Salary, salary =>
         {
             salary.Property(s => s.Min).HasPrecision(12, 2);

@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Local development reads secrets from the same .env file docker compose uses.
 if (builder.Environment.IsDevelopment())
     builder.Configuration.AddDotEnvFile(Path.Combine(builder.Environment.ContentRootPath, "..", ".env"));
 
@@ -17,7 +16,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddValidation();
 
-// The Blazor WebAssembly client is served from its own origin.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));

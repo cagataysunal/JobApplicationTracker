@@ -6,11 +6,7 @@ public static class ConnectionStringResolver
 {
     public const string PasswordKey = "MSSQL_SA_PASSWORD";
 
-    /// <summary>
-    /// Returns the "Default" connection string. The tracked appsettings file holds
-    /// no password; it is filled in from <see cref="PasswordKey"/> (.env, environment
-    /// variable or user-secrets) so the secret never lands in source control.
-    /// </summary>
+    // The tracked appsettings file has no password, so it never lands in source control.
     public static string Resolve(IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Default")

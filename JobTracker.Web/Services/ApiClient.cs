@@ -6,13 +6,11 @@ using JobTracker.Web.Models;
 
 namespace JobTracker.Web.Services;
 
-/// <summary>Result of a write call: either success or a message to show the user.</summary>
 public readonly record struct ApiResult(string? Error)
 {
     public bool Ok => Error is null;
 }
 
-/// <summary>Typed wrapper around the JobTracker HTTP API.</summary>
 public sealed class ApiClient(HttpClient http)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)

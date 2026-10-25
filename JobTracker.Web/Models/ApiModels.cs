@@ -44,7 +44,6 @@ public sealed record JobApplicationRequest(
         a.CompanyName, a.Position, a.PostingUrl, a.Location, a.WorkMode, a.Salary, a.Status, a.AppliedOn, a.Notes);
 }
 
-/// <summary>Mutable model bound to the application form.</summary>
 public sealed class JobApplicationForm
 {
     [Required, MaxLength(200)]
@@ -79,7 +78,6 @@ public sealed class JobApplicationForm
 
     public JobApplicationRequest ToRequest()
     {
-        // Salary is optional: send it only when a range was entered.
         Salary? salary = SalaryMin is { } min && SalaryMax is { } max
             ? new Salary(min, max, Currency, SalaryPeriod)
             : null;
