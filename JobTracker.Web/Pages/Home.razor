@@ -1,0 +1,153 @@
+@page "/"
+@inject ApiClient Api
+
+<PageTitle>Applications</PageTitle>
+
+<h1>Applications</h1>
+
+@if (creating || editing is not null)
+{
+    <ApplicationEditor CompanyNames="companyNames" Existing="editing" OnSaved="OnSavedAsync" OnCancel="CloseEditor" />
+}
+else
+{
+    <p><button @onclick="StartCreate">New application</button></p>
+}
+
+<p>
+    <select @bind="statusFilter" @bind:after="LoadAsync">
+        <option value="">All statuses</option>
+        @foreach (var status in Enum.GetValues<ApplicationStatus>())
+        {
+            <option value="@status">@status</option>
+        }
+    </select>
+    <select @bind="workModeFilter" @bind:after="LoadAsync">
+        <option value="">All work modes</option>
+        @foreach (var mode in Enum.GetValues<WorkMode>())
+        {
+            <option value="@mode">@mode</option>
+        }
+    </select>
+</p>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+
+@if (!loaded)
+{
+    <p>Loading…</p>
+}
+else if (applications.Count == 0)
+{
+    <p>No applications yet.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Position</th>
+                <th>Mode</th>
+                <th>Salary</th>
+                <th>Applied</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var app in applications)
+            {
+                <tr>
+                    <td>@app.CompanyName</td>
+                    <td>
+                        @if (app.PostingUrl is not null)
+                        {
+                            <a href="@app.PostingUrl" target="_blank" rel="noopener">@app.Position</a>
+                        }
+                        else
+                        {
+                            @app.Position
+                        }
+                    </td>
+                    <td>@app.WorkMode</td>
+                    <td>@FormatSalary(app.Salary)</td>
+                    <td>@(app.AppliedOn?.ToString("yyyy-MM-dd") ?? "—")</td>
+                    <td>
+                        <select value="@app.Status" @onchange="e => ChangeStatusAsync(app, e.Value)">
+                            @foreach (var status in Enum.GetValues<ApplicationStatus>())
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <button @onclick="() => StartEdit(app)">Edit</button>
+                        <button @onclick="() => DeleteAsync(app)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<JobApplication> applications = [];
+    private List<string> companyNames = [];
+    private ApplicationStatus? statusFilter;
+    private WorkMode? workModeFilter;
+    private JobApplication? editing;
+    private bool creating;
+    private bool loaded;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            applications = await Api.GetApplicationsAsync(statusFilter, workModeFilter);
+            companyNames = (await Api.GetCompaniesAsync()).Select(c => c.Name).ToList();
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not reach the API. Is it running?";
+        }
+
+        loaded = true;
+    }
+
+    private void StartCreate() => (creating, editing) = (true, null);
+    private void StartEdit(JobApplication app) => (creating, editing) = (false, app);
+    private void CloseEditor() => (creating, editing) = (false, null);
+
+    private async Task OnSavedAsync()
+    {
+        CloseEditor();
+        await LoadAsync();
+    }
+
+    private async Task ChangeStatusAsync(JobApplication app, object? value)
+    {
+        if (!Enum.TryParse<ApplicationStatus>(value?.ToString(), out var status))
+            return;
+
+        var result = await Api.UpdateApplicationAsync(app.Id, JobApplicationRequest.From(app) with { Status = status });
+        error = result.Error;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(JobApplication app)
+    {
+        var result = await Api.DeleteApplicationAsync(app.Id);
+        error = result.Error;
+        await LoadAsync();
+    }
+
+    private static string FormatSalary(Salary? s) =>
+        s is null ? "—" : $"{s.Min:N0}–{s.Max:N0} {s.Currency} / {s.Period.ToString().ToLowerInvariant()}";
+}

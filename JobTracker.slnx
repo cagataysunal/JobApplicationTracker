@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="JobTracker.Api/JobTracker.Api.csproj" />
   <Project Path="JobTracker.Tests/JobTracker.Tests.csproj" />
+  <Project Path="JobTracker.Web/JobTracker.Web.csproj" />
 </Solution>

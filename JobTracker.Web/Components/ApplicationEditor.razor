@@ -1,0 +1,129 @@
+@inject ApiClient Api
+
+<EditForm Model="form" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+    <h2>@(Existing is null ? "New application" : "Edit application")</h2>
+
+    <p>
+        <label>
+            Company
+            <InputText @bind-Value="form.CompanyName" list="company-names" />
+        </label>
+        <datalist id="company-names">
+            @foreach (var name in CompanyNames)
+            {
+                <option value="@name"></option>
+            }
+        </datalist>
+        <ValidationMessage For="() => form.CompanyName" />
+    </p>
+
+    <p>
+        <label>
+            Position
+            <InputText @bind-Value="form.Position" />
+        </label>
+        <ValidationMessage For="() => form.Position" />
+    </p>
+
+    <p>
+        <label>
+            Work mode
+            <InputSelect @bind-Value="form.WorkMode">
+                @foreach (var mode in Enum.GetValues<WorkMode>())
+                {
+                    <option value="@mode">@mode</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Location
+            <InputText @bind-Value="form.Location" />
+        </label>
+    </p>
+
+    <p>
+        <label>
+            Status
+            <InputSelect @bind-Value="form.Status">
+                @foreach (var status in Enum.GetValues<ApplicationStatus>())
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Applied on
+            <InputDate @bind-Value="form.AppliedOn" />
+        </label>
+    </p>
+
+    <p>
+        <label>
+            Posting URL
+            <InputText @bind-Value="form.PostingUrl" />
+        </label>
+        <ValidationMessage For="() => form.PostingUrl" />
+    </p>
+
+    <p>
+        Salary (optional):
+        <InputNumber @bind-Value="form.SalaryMin" placeholder="Min" />
+        –
+        <InputNumber @bind-Value="form.SalaryMax" placeholder="Max" />
+        <InputText @bind-Value="form.Currency" maxlength="3" size="3" />
+        <InputSelect @bind-Value="form.SalaryPeriod">
+            @foreach (var period in Enum.GetValues<SalaryPeriod>())
+            {
+                <option value="@period">@period</option>
+            }
+        </InputSelect>
+    </p>
+
+    <p>
+        <label>
+            Notes
+            <br />
+            <InputTextArea @bind-Value="form.Notes" rows="3" cols="60" />
+        </label>
+    </p>
+
+    @if (error is not null)
+    {
+        <p role="alert">@error</p>
+    }
+
+    <p>
+        <button type="submit" disabled="@saving">Save</button>
+        <button type="button" @onclick="OnCancel">Cancel</button>
+    </p>
+</EditForm>
+
+@code {
+    [Parameter] public IReadOnlyList<string> CompanyNames { get; set; } = [];
+    [Parameter] public JobApplication? Existing { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private JobApplicationForm form = new();
+    private string? error;
+    private bool saving;
+
+    protected override void OnParametersSet() =>
+        form = Existing is null ? new JobApplicationForm() : JobApplicationForm.From(Existing);
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        var request = form.ToRequest();
+        var result = Existing is null
+            ? await Api.CreateApplicationAsync(request)
+            : await Api.UpdateApplicationAsync(Existing.Id, request);
+        saving = false;
+
+        if (result.Ok)
+            await OnSaved.InvokeAsync();
+        else
+            error = result.Error;
+    }
+}

@@ -1,4 +1,4 @@
-namespace JobApplicationTracker.Models;
+namespace JobTracker.Api.Domain;
 
 public enum ApplicationStatus
 {
@@ -7,5 +7,7 @@ public enum ApplicationStatus
     ReceivedResponse,
     Interview,
     Rejected,
-    Offer
+    Offer,
+    Withdrawn,
+    Ghosted
 }

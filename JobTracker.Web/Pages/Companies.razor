@@ -1,0 +1,81 @@
+@page "/companies"
+@inject ApiClient Api
+
+<PageTitle>Companies</PageTitle>
+
+<h1>Companies</h1>
+
+<p>Companies are also created automatically when you add an application.</p>
+
+<EditForm Model="form" OnValidSubmit="CreateAsync">
+    <DataAnnotationsValidator />
+    <p>
+        <label>
+            Name
+            <InputText @bind-Value="form.Name" />
+        </label>
+        <button type="submit">Add</button>
+        <ValidationMessage For="() => form.Name" />
+    </p>
+</EditForm>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+
+@if (companies.Count == 0)
+{
+    <p>No companies yet.</p>
+}
+else
+{
+    <ul>
+        @foreach (var company in companies)
+        {
+            <li>
+                @company.Name
+                <button @onclick="() => DeleteAsync(company)">Delete</button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Company> companies = [];
+    private CompanyForm form = new();
+    private string? error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            companies = await Api.GetCompaniesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not reach the API. Is it running?";
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        var result = await Api.CreateCompanyAsync(new CompanyRequest(form.Name));
+        error = result.Error;
+
+        if (result.Ok)
+        {
+            form = new CompanyForm();
+            await LoadAsync();
+        }
+    }
+
+    private async Task DeleteAsync(Company company)
+    {
+        var result = await Api.DeleteCompanyAsync(company.Id);
+        error = result.Error;
+        await LoadAsync();
+    }
+}
