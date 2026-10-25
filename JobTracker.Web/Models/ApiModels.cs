@@ -13,7 +13,7 @@ public sealed record Salary(decimal Min, decimal Max, string Currency, SalaryPer
 
 public sealed record Company(Guid Id, string Name, string? Website, string? Country);
 
-public sealed record CompanyRequest(string Name, string? Website, string? Country);
+public sealed record CompanyRequest(string Name);
 
 public sealed record JobApplication(
     Guid Id,
@@ -30,7 +30,7 @@ public sealed record JobApplication(
     DateTimeOffset UpdatedAt);
 
 public sealed record JobApplicationRequest(
-    Guid CompanyId,
+    string CompanyName,
     string Position,
     string? PostingUrl,
     string? Location,
@@ -41,14 +41,14 @@ public sealed record JobApplicationRequest(
     string? Notes)
 {
     public static JobApplicationRequest From(JobApplication a) => new(
-        a.CompanyId, a.Position, a.PostingUrl, a.Location, a.WorkMode, a.Salary, a.Status, a.AppliedOn, a.Notes);
+        a.CompanyName, a.Position, a.PostingUrl, a.Location, a.WorkMode, a.Salary, a.Status, a.AppliedOn, a.Notes);
 }
 
 /// <summary>Mutable model bound to the application form.</summary>
 public sealed class JobApplicationForm
 {
-    [Required(ErrorMessage = "Pick a company.")]
-    public Guid? CompanyId { get; set; }
+    [Required, MaxLength(200)]
+    public string CompanyName { get; set; } = "";
 
     [Required, MaxLength(200)]
     public string Position { get; set; } = "";
@@ -85,13 +85,13 @@ public sealed class JobApplicationForm
             : null;
 
         return new JobApplicationRequest(
-            CompanyId!.Value, Position, Empty(PostingUrl), Empty(Location),
+            CompanyName, Position, Empty(PostingUrl), Empty(Location),
             WorkMode, salary, Status, AppliedOn, Empty(Notes));
     }
 
     public static JobApplicationForm From(JobApplication a) => new()
     {
-        CompanyId = a.CompanyId,
+        CompanyName = a.CompanyName,
         Position = a.Position,
         PostingUrl = a.PostingUrl,
         Location = a.Location,
@@ -112,10 +112,4 @@ public sealed class CompanyForm
 {
     [Required, MaxLength(200)]
     public string Name { get; set; } = "";
-
-    [Url, MaxLength(500)]
-    public string? Website { get; set; }
-
-    [MaxLength(100)]
-    public string? Country { get; set; }
 }

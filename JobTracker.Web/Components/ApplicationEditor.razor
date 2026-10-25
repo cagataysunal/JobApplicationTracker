@@ -1,28 +1,33 @@
 @inject ApiClient Api
 
-<EditForm Model="form" OnValidSubmit="SaveAsync" class="card form">
+<EditForm Model="form" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
     <h2>@(Existing is null ? "New application" : "Edit application")</h2>
 
-    <div class="grid">
+    <p>
         <label>
             Company
-            <InputSelect @bind-Value="form.CompanyId">
-                <option value="">Select…</option>
-                @foreach (var company in Companies)
-                {
-                    <option value="@company.Id">@company.Name</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="() => form.CompanyId" />
+            @* Type any name: an existing company is reused, a new one is created. *@
+            <InputText @bind-Value="form.CompanyName" list="company-names" />
         </label>
+        <datalist id="company-names">
+            @foreach (var name in CompanyNames)
+            {
+                <option value="@name"></option>
+            }
+        </datalist>
+        <ValidationMessage For="() => form.CompanyName" />
+    </p>
 
+    <p>
         <label>
             Position
             <InputText @bind-Value="form.Position" />
-            <ValidationMessage For="() => form.Position" />
         </label>
+        <ValidationMessage For="() => form.Position" />
+    </p>
 
+    <p>
         <label>
             Work mode
             <InputSelect @bind-Value="form.WorkMode">
@@ -32,12 +37,13 @@
                 }
             </InputSelect>
         </label>
-
         <label>
             Location
             <InputText @bind-Value="form.Location" />
         </label>
+    </p>
 
+    <p>
         <label>
             Status
             <InputSelect @bind-Value="form.Status">
@@ -47,47 +53,55 @@
                 }
             </InputSelect>
         </label>
-
         <label>
             Applied on
             <InputDate @bind-Value="form.AppliedOn" />
         </label>
+    </p>
 
-        <label class="wide">
+    <p>
+        <label>
             Posting URL
             <InputText @bind-Value="form.PostingUrl" />
-            <ValidationMessage For="() => form.PostingUrl" />
         </label>
+        <ValidationMessage For="() => form.PostingUrl" />
+    </p>
 
-        <fieldset class="wide salary">
-            <legend>Salary (optional)</legend>
-            <InputNumber @bind-Value="form.SalaryMin" placeholder="Min" />
-            <InputNumber @bind-Value="form.SalaryMax" placeholder="Max" />
-            <InputText @bind-Value="form.Currency" maxlength="3" class="currency" />
-            <InputSelect @bind-Value="form.SalaryPeriod">
-                @foreach (var period in Enum.GetValues<SalaryPeriod>())
-                {
-                    <option value="@period">@period</option>
-                }
-            </InputSelect>
-        </fieldset>
+    <p>
+        Salary (optional):
+        <InputNumber @bind-Value="form.SalaryMin" placeholder="Min" />
+        –
+        <InputNumber @bind-Value="form.SalaryMax" placeholder="Max" />
+        <InputText @bind-Value="form.Currency" maxlength="3" size="3" />
+        <InputSelect @bind-Value="form.SalaryPeriod">
+            @foreach (var period in Enum.GetValues<SalaryPeriod>())
+            {
+                <option value="@period">@period</option>
+            }
+        </InputSelect>
+    </p>
 
-        <label class="wide">
+    <p>
+        <label>
             Notes
-            <InputTextArea @bind-Value="form.Notes" rows="3" />
+            <br />
+            <InputTextArea @bind-Value="form.Notes" rows="3" cols="60" />
         </label>
-    </div>
+    </p>
 
-    <ErrorBanner Message="@error" />
+    @if (error is not null)
+    {
+        <p role="alert">@error</p>
+    }
 
-    <div class="actions">
-        <button type="submit" class="primary" disabled="@saving">Save</button>
+    <p>
+        <button type="submit" disabled="@saving">Save</button>
         <button type="button" @onclick="OnCancel">Cancel</button>
-    </div>
+    </p>
 </EditForm>
 
 @code {
-    [Parameter, EditorRequired] public List<Company> Companies { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> CompanyNames { get; set; } = [];
     [Parameter] public JobApplication? Existing { get; set; }
     [Parameter] public EventCallback OnSaved { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }

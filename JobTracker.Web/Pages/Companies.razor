@@ -1,62 +1,44 @@
 @page "/companies"
 @inject ApiClient Api
 
-<PageTitle>Companies · Job Tracker</PageTitle>
+<PageTitle>Companies</PageTitle>
 
 <h1>Companies</h1>
 
-<EditForm Model="form" OnValidSubmit="CreateAsync" class="card form inline">
+<p>Companies are also created automatically when you add an application.</p>
+
+<EditForm Model="form" OnValidSubmit="CreateAsync">
     <DataAnnotationsValidator />
-    <label>
-        Name
-        <InputText @bind-Value="form.Name" />
+    <p>
+        <label>
+            Name
+            <InputText @bind-Value="form.Name" />
+        </label>
+        <button type="submit">Add</button>
         <ValidationMessage For="() => form.Name" />
-    </label>
-    <label>
-        Website
-        <InputText @bind-Value="form.Website" placeholder="https://" />
-        <ValidationMessage For="() => form.Website" />
-    </label>
-    <label>
-        Country
-        <InputText @bind-Value="form.Country" />
-    </label>
-    <button type="submit" class="primary">Add</button>
+    </p>
 </EditForm>
 
-<ErrorBanner Message="@error" />
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
 
 @if (companies.Count == 0)
 {
-    <p class="muted">No companies yet.</p>
+    <p>No companies yet.</p>
 }
 else
 {
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr><th>Name</th><th>Website</th><th>Country</th><th></th></tr>
-            </thead>
-            <tbody>
-                @foreach (var company in companies)
-                {
-                    <tr>
-                        <td>@company.Name</td>
-                        <td>
-                            @if (company.Website is not null)
-                            {
-                                <a href="@company.Website" target="_blank" rel="noopener">@company.Website</a>
-                            }
-                        </td>
-                        <td>@company.Country</td>
-                        <td class="row-actions">
-                            <button class="danger" @onclick="() => DeleteAsync(company)">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    <ul>
+        @foreach (var company in companies)
+        {
+            <li>
+                @company.Name
+                <button @onclick="() => DeleteAsync(company)">Delete</button>
+            </li>
+        }
+    </ul>
 }
 
 @code {
@@ -80,10 +62,7 @@ else
 
     private async Task CreateAsync()
     {
-        var website = string.IsNullOrWhiteSpace(form.Website) ? null : form.Website;
-        var country = string.IsNullOrWhiteSpace(form.Country) ? null : form.Country;
-
-        var result = await Api.CreateCompanyAsync(new CompanyRequest(form.Name, website, country));
+        var result = await Api.CreateCompanyAsync(new CompanyRequest(form.Name));
         error = result.Error;
 
         if (result.Ok)
