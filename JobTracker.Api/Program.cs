@@ -1,14 +1,19 @@
 using System.Text.Json.Serialization;
 using JobTracker.Api.Features.Applications;
 using JobTracker.Api.Features.Companies;
+using JobTracker.Api.Infrastructure;
 using JobTracker.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Local development reads secrets from the same .env file docker compose uses.
+if (builder.Environment.IsDevelopment())
+    builder.Configuration.AddDotEnvFile(Path.Combine(builder.Environment.ContentRootPath, "..", ".env"));
+
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+    options.UseSqlServer(ConnectionStringResolver.Resolve(builder.Configuration)));
 
 builder.Services.AddValidation();
 

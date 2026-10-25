@@ -11,8 +11,10 @@ This is a WIP job application tracker built as a showcase project for my portfol
 ## Setting up
 
 1. Copy `.env.example` as `.env` and set your own SQL Server password.
-   Use the same password in `JobTracker.Api/appsettings.Development.json`
-   (or better, `dotnet user-secrets`).
+   This is the only place the password lives: docker compose uses it to
+   create the server, and the API reads it from the same file in Development.
+   A real environment variable or `dotnet user-secrets` value for
+   `MSSQL_SA_PASSWORD` takes precedence over `.env`.
 2. Start the database:
 
    ```bash
@@ -29,6 +31,10 @@ This is a WIP job application tracker built as a showcase project for my portfol
    >
    > With Docker Desktop instead, enable **Settings → General → "Use Rosetta for
    > x86_64/amd64 emulation on Apple Silicon"**.
+
+   > SQL Server stores the SA password in its data volume the first time it
+   > starts. If you change it in `.env` later, recreate the volume with
+   > `docker compose down -v` (this deletes the data).
 
 3. Create the schema:
 
