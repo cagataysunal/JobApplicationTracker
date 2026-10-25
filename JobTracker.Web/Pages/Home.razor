@@ -1,0 +1,172 @@
+@page "/"
+@inject ApiClient Api
+
+<PageTitle>Applications · Job Tracker</PageTitle>
+
+<div class="page-head">
+    <h1>Applications</h1>
+    @if (editing is null && !creating)
+    {
+        <button class="primary" @onclick="StartCreate" disabled="@(companies.Count == 0)">New application</button>
+    }
+</div>
+
+@if (companies.Count == 0 && loaded)
+{
+    <p class="muted">Add a company first on the <a href="companies">Companies</a> page.</p>
+}
+
+@if (creating || editing is not null)
+{
+    <ApplicationEditor Companies="companies" Existing="editing" OnSaved="OnSavedAsync" OnCancel="CloseEditor" />
+}
+
+<div class="filters">
+    <select @bind="statusFilter" @bind:after="LoadAsync">
+        <option value="">All statuses</option>
+        @foreach (var status in Enum.GetValues<ApplicationStatus>())
+        {
+            <option value="@status">@status</option>
+        }
+    </select>
+    <select @bind="workModeFilter" @bind:after="LoadAsync">
+        <option value="">All work modes</option>
+        @foreach (var mode in Enum.GetValues<WorkMode>())
+        {
+            <option value="@mode">@mode</option>
+        }
+    </select>
+</div>
+
+<ErrorBanner Message="@error" />
+
+@if (!loaded)
+{
+    <p class="muted">Loading…</p>
+}
+else if (applications.Count == 0)
+{
+    <p class="muted">No applications yet.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Position</th>
+                    <th>Mode</th>
+                    <th>Salary</th>
+                    <th>Applied</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var app in applications)
+                {
+                    <tr>
+                        <td>@app.CompanyName</td>
+                        <td>
+                            @if (app.PostingUrl is not null)
+                            {
+                                <a href="@app.PostingUrl" target="_blank" rel="noopener">@app.Position</a>
+                            }
+                            else
+                            {
+                                @app.Position
+                            }
+                        </td>
+                        <td>@app.WorkMode</td>
+                        <td>@FormatSalary(app.Salary)</td>
+                        <td>@(app.AppliedOn?.ToString("yyyy-MM-dd") ?? "—")</td>
+                        <td>
+                            <select class="status status-@app.Status.ToString().ToLowerInvariant()"
+                                    value="@app.Status"
+                                    @onchange="e => ChangeStatusAsync(app, e.Value)">
+                                @foreach (var status in Enum.GetValues<ApplicationStatus>())
+                                {
+                                    <option value="@status">@status</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="row-actions">
+                            <button @onclick="() => StartEdit(app)">Edit</button>
+                            <button class="danger" @onclick="() => DeleteAsync(app)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<JobApplication> applications = [];
+    private List<Company> companies = [];
+    private ApplicationStatus? statusFilter;
+    private WorkMode? workModeFilter;
+    private JobApplication? editing;
+    private bool creating;
+    private bool loaded;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            companies = await Api.GetCompaniesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not reach the API. Is it running?";
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            applications = await Api.GetApplicationsAsync(statusFilter, workModeFilter);
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not reach the API. Is it running?";
+        }
+
+        loaded = true;
+    }
+
+    private void StartCreate() => (creating, editing) = (true, null);
+    private void StartEdit(JobApplication app) => (creating, editing) = (false, app);
+    private void CloseEditor() => (creating, editing) = (false, null);
+
+    private async Task OnSavedAsync()
+    {
+        CloseEditor();
+        await LoadAsync();
+    }
+
+    private async Task ChangeStatusAsync(JobApplication app, object? value)
+    {
+        if (!Enum.TryParse<ApplicationStatus>(value?.ToString(), out var status))
+            return;
+
+        var result = await Api.UpdateApplicationAsync(app.Id, JobApplicationRequest.From(app) with { Status = status });
+        error = result.Error;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(JobApplication app)
+    {
+        var result = await Api.DeleteApplicationAsync(app.Id);
+        error = result.Error;
+        await LoadAsync();
+    }
+
+    private static string FormatSalary(Salary? s) =>
+        s is null ? "—" : $"{s.Min:N0}–{s.Max:N0} {s.Currency} / {s.Period.ToString().ToLowerInvariant()}";
+}

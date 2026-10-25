@@ -1,0 +1,102 @@
+@page "/companies"
+@inject ApiClient Api
+
+<PageTitle>Companies · Job Tracker</PageTitle>
+
+<h1>Companies</h1>
+
+<EditForm Model="form" OnValidSubmit="CreateAsync" class="card form inline">
+    <DataAnnotationsValidator />
+    <label>
+        Name
+        <InputText @bind-Value="form.Name" />
+        <ValidationMessage For="() => form.Name" />
+    </label>
+    <label>
+        Website
+        <InputText @bind-Value="form.Website" placeholder="https://" />
+        <ValidationMessage For="() => form.Website" />
+    </label>
+    <label>
+        Country
+        <InputText @bind-Value="form.Country" />
+    </label>
+    <button type="submit" class="primary">Add</button>
+</EditForm>
+
+<ErrorBanner Message="@error" />
+
+@if (companies.Count == 0)
+{
+    <p class="muted">No companies yet.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Name</th><th>Website</th><th>Country</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var company in companies)
+                {
+                    <tr>
+                        <td>@company.Name</td>
+                        <td>
+                            @if (company.Website is not null)
+                            {
+                                <a href="@company.Website" target="_blank" rel="noopener">@company.Website</a>
+                            }
+                        </td>
+                        <td>@company.Country</td>
+                        <td class="row-actions">
+                            <button class="danger" @onclick="() => DeleteAsync(company)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<Company> companies = [];
+    private CompanyForm form = new();
+    private string? error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            companies = await Api.GetCompaniesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not reach the API. Is it running?";
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        var website = string.IsNullOrWhiteSpace(form.Website) ? null : form.Website;
+        var country = string.IsNullOrWhiteSpace(form.Country) ? null : form.Country;
+
+        var result = await Api.CreateCompanyAsync(new CompanyRequest(form.Name, website, country));
+        error = result.Error;
+
+        if (result.Ok)
+        {
+            form = new CompanyForm();
+            await LoadAsync();
+        }
+    }
+
+    private async Task DeleteAsync(Company company)
+    {
+        var result = await Api.DeleteCompanyAsync(company.Id);
+        error = result.Error;
+        await LoadAsync();
+    }
+}
