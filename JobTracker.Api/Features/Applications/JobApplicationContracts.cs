@@ -20,7 +20,9 @@ public sealed record SalaryDto(
 }
 
 public sealed record JobApplicationRequest(
-    Guid CompanyId,
+    // Companies are matched by name and created on first use, so the client
+    // never has to create one up front.
+    [property: Required, MaxLength(200)] string CompanyName,
     [property: Required, MaxLength(200)] string Position,
     [property: Url, MaxLength(1000)] string? PostingUrl,
     [property: MaxLength(200)] string? Location,

@@ -46,13 +46,10 @@ public static class JobApplicationEndpoints
             ? TypedResults.Ok(JobApplicationResponse.From(application))
             : TypedResults.NotFound();
 
-    private static async Task<Results<CreatedAtRoute<JobApplicationResponse>, ValidationProblem>> Create(
+    private static async Task<CreatedAtRoute<JobApplicationResponse>> Create(
         JobApplicationRequest request, AppDbContext db, CancellationToken ct)
     {
-        var company = await db.Companies.FindAsync([request.CompanyId], ct);
-        if (company is null)
-            return CompanyNotFound();
-
+        var company = await FindOrCreateCompanyAsync(request.CompanyName, db, ct);
         var application = new JobApplication { Position = request.Position, Company = company };
         Apply(application, request);
 
@@ -63,7 +60,7 @@ public static class JobApplicationEndpoints
             JobApplicationResponse.From(application), GetApplicationById, new { id = application.Id });
     }
 
-    private static async Task<Results<Ok<JobApplicationResponse>, NotFound, ValidationProblem>> Update(
+    private static async Task<Results<Ok<JobApplicationResponse>, NotFound>> Update(
         Guid id, JobApplicationRequest request, AppDbContext db, CancellationToken ct)
     {
         var application = await db.JobApplications.Include(a => a.Company)
@@ -71,14 +68,7 @@ public static class JobApplicationEndpoints
         if (application is null)
             return TypedResults.NotFound();
 
-        if (application.CompanyId != request.CompanyId)
-        {
-            var company = await db.Companies.FindAsync([request.CompanyId], ct);
-            if (company is null)
-                return CompanyNotFound();
-            application.Company = company;
-        }
-
+        application.Company = await FindOrCreateCompanyAsync(request.CompanyName, db, ct);
         Apply(application, request);
         await db.SaveChangesAsync(ct);
 
@@ -101,9 +91,16 @@ public static class JobApplicationEndpoints
         application.ChangeStatus(request.Status, request.AppliedOn);
     }
 
-    private static ValidationProblem CompanyNotFound() =>
-        TypedResults.ValidationProblem(new Dictionary<string, string[]>
-        {
-            [nameof(JobApplicationRequest.CompanyId)] = ["Company does not exist."]
-        });
+    // SQL Server's default collation is case-insensitive, so "acme" matches "Acme".
+    private static async Task<Company> FindOrCreateCompanyAsync(string name, AppDbContext db, CancellationToken ct)
+    {
+        var trimmed = name.Trim();
+        var company = await db.Companies.FirstOrDefaultAsync(c => c.Name == trimmed, ct);
+        if (company is not null)
+            return company;
+
+        company = new Company { Name = trimmed };
+        db.Companies.Add(company);
+        return company;
+    }
 }

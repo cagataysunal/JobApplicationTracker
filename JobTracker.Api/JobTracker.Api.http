@@ -1,5 +1,4 @@
 @host = http://localhost:5250
-@companyId = 00000000-0000-0000-0000-000000000000
 
 ### Create company
 POST {{host}}/api/companies
@@ -15,7 +14,7 @@ POST {{host}}/api/applications
 Content-Type: application/json
 
 {
-  "companyId": "{{companyId}}",
+  "companyName": "Acme",
   "position": "Senior .NET Engineer",
   "workMode": "Remote",
   "salary": { "min": 80000, "max": 95000, "currency": "EUR", "period": "Yearly" },
