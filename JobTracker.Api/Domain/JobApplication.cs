@@ -20,8 +20,6 @@ public sealed class JobApplication : Entity
     public ApplicationStatus Status { get; private set; } = ApplicationStatus.Saved;
     public DateOnly? AppliedOn { get; private set; }
 
-    public List<Interview> Interviews { get; } = [];
-
     /// <summary>
     /// Status changes go through here so business rules stay in one place.
     /// Moving past "Saved" stamps the application date if it was not set.

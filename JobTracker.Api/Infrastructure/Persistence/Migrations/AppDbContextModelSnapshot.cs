@@ -56,42 +56,6 @@ namespace JobTracker.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("JobTracker.Api.Domain.Interview", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("JobApplicationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<DateTimeOffset>("ScheduledAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobApplicationId");
-
-                    b.HasIndex("ScheduledAt");
-
-                    b.ToTable("Interviews");
-                });
-
             modelBuilder.Entity("JobTracker.Api.Domain.JobApplication", b =>
                 {
                     b.Property<Guid>("Id")
@@ -169,15 +133,6 @@ namespace JobTracker.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("JobApplications");
                 });
 
-            modelBuilder.Entity("JobTracker.Api.Domain.Interview", b =>
-                {
-                    b.HasOne("JobTracker.Api.Domain.JobApplication", null)
-                        .WithMany("Interviews")
-                        .HasForeignKey("JobApplicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("JobTracker.Api.Domain.JobApplication", b =>
                 {
                     b.HasOne("JobTracker.Api.Domain.Company", "Company")
@@ -192,11 +147,6 @@ namespace JobTracker.Api.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("JobTracker.Api.Domain.Company", b =>
                 {
                     b.Navigation("Applications");
-                });
-
-            modelBuilder.Entity("JobTracker.Api.Domain.JobApplication", b =>
-                {
-                    b.Navigation("Interviews");
                 });
 #pragma warning restore 612, 618
         }

@@ -21,11 +21,6 @@ internal sealed class JobApplicationConfiguration : IEntityTypeConfiguration<Job
             salary.Property(s => s.Currency).HasMaxLength(3).IsFixedLength().IsUnicode(false);
         });
 
-        builder.HasMany(a => a.Interviews)
-            .WithOne()
-            .HasForeignKey(i => i.JobApplicationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasIndex(a => a.Status);
     }
 }
