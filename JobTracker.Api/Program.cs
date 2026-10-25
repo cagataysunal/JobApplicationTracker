@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using JobTracker.Api.Features.Applications;
+using JobTracker.Api.Features.Companies;
 using JobTracker.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,13 +10,17 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddValidation();
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -21,8 +28,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
-app.MapControllers();
+app.MapCompanyEndpoints();
+app.MapJobApplicationEndpoints();
 
 app.Run();

@@ -1,6 +1,26 @@
-@JobTracker.Api_HostAddress = http://localhost:5250
+@host = http://localhost:5250
+@companyId = 00000000-0000-0000-0000-000000000000
 
-GET {{JobTracker.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Create company
+POST {{host}}/api/companies
+Content-Type: application/json
 
-###
+{ "name": "Acme", "website": "https://acme.io", "country": "Netherlands" }
+
+### List companies
+GET {{host}}/api/companies
+
+### Create application
+POST {{host}}/api/applications
+Content-Type: application/json
+
+{
+  "companyId": "{{companyId}}",
+  "position": "Senior .NET Engineer",
+  "workMode": "Remote",
+  "salary": { "min": 80000, "max": 95000, "currency": "EUR", "period": "Yearly" },
+  "status": "Applied"
+}
+
+### List remote applications in interview stage
+GET {{host}}/api/applications?workMode=Remote&status=Interview
