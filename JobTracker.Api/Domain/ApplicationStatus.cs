@@ -1,4 +1,4 @@
-namespace JobApplicationTracker.Models;
+namespace JobTracker.Api.Domain;
 
 public enum ApplicationStatus
 {
